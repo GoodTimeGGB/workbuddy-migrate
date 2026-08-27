@@ -3,83 +3,212 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WorkBuddy 迁移工具 - 免费下载</title>
+<title>WorkBuddy 迁移工具 · GoodTime</title>
+<meta name="description" content="在两台电脑之间迁移 WorkBuddy 的空间、会话与任务数据。免费开源 · 支持 Windows / macOS / Linux 跨系统迁移">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --brand:#4f6ef7; --ink:#1c2333; --muted:#6b7280;
-    --bg:#f6f7fb; --card:#ffffff; --line:#e5e8f0; --ok:#16a34a;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
-  .wrap{max-width:860px;margin:0 auto;padding:0 20px 64px}
-  header{background:linear-gradient(135deg,#4f6ef7 0%,#7a5cf0 100%);color:#fff;padding:56px 20px 48px;text-align:center}
-  header h1{font-size:30px;font-weight:700;letter-spacing:.5px}
-  header p{margin-top:10px;opacity:.92;font-size:15px}
-  .btn{display:inline-block;background:#fff;color:var(--brand);font-weight:700;font-size:17px;padding:13px 38px;border-radius:999px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.18);margin-top:26px;transition:transform .15s ease}
-  .btn:hover{transform:translateY(-2px)}
-  .meta{margin-top:14px;font-size:12.5px;opacity:.85}
-  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin-top:22px}
-  h2{font-size:18px;margin-bottom:12px}
-  ul{padding-left:20px}
-  li{margin:5px 0}
-  code{background:#eef1f8;border-radius:5px;padding:1px 7px;font-size:13.5px}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
-  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
-  th{color:var(--muted);font-weight:600;width:110px}
-  a.link{color:var(--brand);text-decoration:none;font-weight:600}
-  a.link:hover{text-decoration:underline}
-  .note{font-size:13px;color:var(--muted);word-break:break-all}
-  footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:36px}
+:root{
+  --bg-page:#FAF9F6; --bg-soft:#F4F3EF; --bg-card:#FFFFFF;
+  --green:#1B5E3B; --green-soft:#E8F0EB;
+  --ink:#1A1D1A; --ink-2:#4A5648; --muted:#7A8578;
+  --line:#E4E6E0; --line-soft:#EDEFE8;
+  --accent:#B45309; --accent-soft:#FDF3E7;
+  --f-sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --f-mono:"JetBrains Mono","SF Mono",Consolas,monospace;
+  --f-serif:Georgia,"Times New Roman","SimSun",serif;
+  --shadow-sm:0 1px 3px rgba(26,29,26,.04);
+  --shadow-md:0 4px 14px rgba(26,29,26,.06);
+  --shadow-glow:0 8px 24px -6px rgba(27,94,59,.25);
+  --radius:14px; --radius-lg:20px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-page);font-family:var(--f-sans);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+code{background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:5px;padding:1px 7px;font-family:var(--f-mono);font-size:13.5px;color:var(--ink)}
+
+/* ── 背景装饰（同主站）── */
+.bg-decor{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.bg-dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(27,94,59,.05) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(180deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.3) 45%,rgba(0,0,0,.5) 80%,rgba(0,0,0,.15) 100%);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.3) 45%,rgba(0,0,0,.5) 80%,rgba(0,0,0,.15) 100%)}
+.bg-glow{position:absolute;border-radius:9999px;filter:blur(64px);animation:glow-float 30s ease-in-out infinite alternate}
+.bg-glow--1{width:560px;height:560px;left:-180px;top:60px;background:rgba(27,94,59,.07)}
+.bg-glow--2{width:480px;height:480px;right:-160px;top:720px;background:rgba(180,83,9,.05);animation-delay:-10s}
+@keyframes glow-float{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(50px,-70px,0) scale(1.15)}}
+
+/* ── 容器（同主站宽度体系）── */
+.page{width:100%;max-width:1280px;margin:0 auto;padding:0 24px}
+.section{max-width:880px;margin:0 auto;margin-top:72px}
+.section-title{font-size:22px;font-weight:600;color:var(--ink);line-height:30px;margin-bottom:28px;position:relative;padding-left:14px}
+.section-title::before{content:'';position:absolute;left:0;top:7px;width:4px;height:16px;border-radius:2px;background:var(--accent)}
+.card{background:var(--bg-card);border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px solid var(--line-soft);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;padding:28px 28px}
+.card:hover{border-color:var(--line)}
+
+/* ── Hero ── */
+.hero{padding:76px 0 20px;text-align:center}
+.hero-inner{width:720px;max-width:100%;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 18px;background:var(--green-soft);border:1px solid rgba(27,94,59,.15);border-radius:9999px;font-family:var(--f-mono);font-size:13px;color:var(--green);white-space:nowrap;animation:fade-in-down .6s ease both}
+.hero-badge .dot{width:8px;height:8px;border-radius:9999px;background:#16a34a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+h1.tool-name{margin-top:44px;font-size:44px;font-weight:700;line-height:52px;color:var(--ink);letter-spacing:.5px;animation:fade-in-up .7s ease .1s both}
+.tool-role{margin-top:12px;font-family:var(--f-mono);font-size:16px;letter-spacing:2px;color:var(--green);animation:fade-in-up .7s ease .15s both}
+.tool-intro{margin-top:26px;max-width:600px;font-size:16px;line-height:28px;color:var(--ink-2);animation:fade-in-up .7s ease .2s both}
+
+/* 下载按钮区 */
+.download-row{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fade-in-up .7s ease .3s both}
+.btn-main{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:54px;padding:0 34px;background:var(--green);border-radius:9999px;color:#fff;font-size:16px;font-weight:500;box-shadow:var(--shadow-glow);transition:transform .25s ease,background .25s ease,box-shadow .25s ease}
+.btn-main:hover{transform:translateY(-2px);background:#14512f;box-shadow:0 12px 28px -6px rgba(27,94,59,.35)}
+.btn-main svg{width:17px;height:17px}
+.meta-line{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.meta-line a{color:var(--muted);border-bottom:1px dotted var(--muted);transition:color .2s ease}
+.meta-line a:hover{color:var(--green);border-color:var(--green)}
+
+/* 代码仓库双卡 */
+.repo-grid{margin-top:26px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;animation:fade-in-up .7s ease .38s both}
+.repo-card{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 22px;background:var(--bg-card);border:1px solid var(--line);border-radius:9999px;font-family:var(--f-mono);font-size:14px;color:var(--ink);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.repo-card:hover{transform:translateY(-2px);border-color:rgba(27,94,59,.3);box-shadow:var(--shadow-md)}
+.repo-card svg{width:19px;height:19px;flex-shrink:0}
+.repo-tag{height:22px;line-height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:600}
+.repo-tag--cnb{background:var(--accent-soft);color:var(--accent)}
+.repo-tag--gh{background:var(--green-soft);color:var(--green)}
+
+@keyframes fade-in-down{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade-in-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── 内容区块 ── */
+.feature-list{list-style:none}
+.feature-list li{position:relative;padding-left:26px;margin:10px 0;font-size:15px;color:var(--ink-2)}
+.feature-list li::before{content:'✓';position:absolute;left:2px;top:0;color:var(--green);font-weight:700}
+.feature-list b{color:var(--ink)}
+.section p.desc{font-size:15px;color:var(--ink-2)}
+
+table.quick-table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:4px}
+.quick-table th,.quick-table td{border-bottom:1px solid var(--line-soft);padding:10px 10px;text-align:left;vertical-align:top}
+.quick-table th{color:var(--muted);font-weight:600;width:96px;font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+.inline-link{color:var(--green);font-weight:600;border-bottom:1px solid rgba(27,94,59,.3);transition:border-color .2s ease}
+.inline-link:hover{border-bottom-color:var(--green)}
+.more-links{margin-top:14px;font-size:14px;color:var(--ink-2)}
+
+.disclaimer-quote{margin-top:2px;padding:14px 18px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;font-family:var(--f-serif);font-size:14.5px;font-style:italic;line-height:26px;color:var(--ink)}
+
+/* ── 页脚（同主站）── */
+.site-footer{width:100%;margin-top:88px;padding:28px 24px;border-top:1px solid var(--line);background:rgba(255,255,255,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.site-footer-inner{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:var(--f-inter);font-size:13px;color:var(--muted);line-height:22px;text-align:center}
+.site-footer a{color:var(--muted);transition:color .2s ease}
+.site-footer a:hover{color:var(--green)}
+
+@media (max-width:768px){
+  h1.tool-name{font-size:34px;line-height:42px}
+  .tool-role{font-size:14px;letter-spacing:1.5px}
+  .hero{padding:52px 0 8px}
+  .section{margin-top:52px}
+  .card{padding:22px 20px}
+  .repo-grid{flex-direction:column;align-items:stretch}
+  .repo-card{justify-content:center}
+  .download-row .btn-main{width:100%;max-width:340px}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>WorkBuddy 迁移工具</h1>
-  <p>在两台电脑之间迁移 WorkBuddy 的空间、会话与任务数据 · 支持 Windows / macOS / Linux · 支持跨系统迁移</p>
-  <a class="btn" href="workbuddy-migrate-v1.0.0.zip" download>⬇️ 下载 v1.0.0（约 0.6 MB）</a>
-  <div class="meta">SHA256：4d96ce62…ab34e8025 · <a href="workbuddy-migrate-v1.0.0.sha256" style="color:#fff" download>校验文件</a></div>
-</header>
-
-<div class="wrap">
-
-  <section>
-    <h2>它是什么</h2>
-    <p>把旧电脑上 WorkBuddy 的<b>注册信息、会话、任务、文件内容（可选含完整对话记录）</b>打包成一个 zip，传到新电脑一键导入。导入前有完整预览与自动备份，<b>任何情况下不会删除目标电脑已有数据</b>。</p>
-    <ul style="margin-top:10px">
-      <li>✅ 跨系统迁移：公司 Windows 导出 → 家里 Mac 导入（自动重写路径前缀）</li>
-      <li>✅ 纯 Python 标准库实现，零第三方依赖；未装 Python 时启动脚本会引导一键安装</li>
-      <li>✅ 全程本地运行，不上传任何数据到云端</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>快速开始</h2>
-    <table>
-      <tr><th>下载后</th><td>解压 zip 到任意文件夹（Windows 解压前建议右键 → 属性 → 解除锁定）</td></tr>
-      <tr><th>Windows</th><td>双击 <code>scripts/windows/start.bat</code>，自动打开浏览器</td></tr>
-      <tr><th>macOS</th><td>终端执行 <code>chmod +x scripts/macos/*.sh scripts/macos/*.command</code> 后双击 <code>start.command</code></td></tr>
-      <tr><th>Linux</th><td><code>bash scripts/linux/start.sh</code></td></tr>
-    </table>
-    <p style="margin-top:12px">使用期间请保持命令行窗口开启（可最小化）。详细图文步骤见 <a class="link" href="guide.html">在线使用说明</a>。</p>
-  </section>
-
-  <section>
-    <h2>环境要求与常见问题</h2>
-    <ul>
-      <li>Python 3.8+（<a class="link" href="https://www.python.org/downloads/" target="_blank">官网下载</a> · 慢可用<a class="link" href="https://mirrors.huaweicloud.com/python/" target="_blank">华为镜像</a>）；没有也没关系，双击启动后会引导安装</li>
-      <li>黑窗口一闪而过？看同目录 <code>start.log</code>；或运行 <code>scripts/windows/diagnose.bat</code> 一键诊断</li>
-      <li>页面显示"正在扫描本机空间"是正常现象，首次扫描大目录需要几十秒</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>免责声明</h2>
-    <p class="note">本工具为个人开发的第三方开源工具（MIT License），非 WorkBuddy 官方出品，与腾讯/WorkBuddy 团队无关联。请在导入前确认已做好数据备份；导出包内含你的对话与任务数据，请通过可信渠道传输并妥善保管。使用本工具造成的任何数据问题由使用者自行承担。</p>
-  </section>
-
-  <footer>宁的AI小站 (GoodTime) · v1.0.0 · 2026-08-27</footer>
+<div class="bg-decor" aria-hidden="true">
+  <div class="bg-dots"></div>
+  <div class="bg-glow bg-glow--1"></div>
+  <div class="bg-glow bg-glow--2"></div>
 </div>
+
+<main class="page">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="hero-badge"><span class="dot"></span>v1.0.0 · 免费开源 · MIT License</span>
+      <h1 class="tool-name">WorkBuddy 迁移工具</h1>
+      <p class="tool-role">&gt; 两台电脑之间，数据完整搬家</p>
+      <p class="tool-intro">把旧电脑上 WorkBuddy 的空间、会话与任务数据打包成一个 zip，在新电脑一键导入。支持 Windows / macOS / Linux 跨系统迁移，导入前有完整预览与自动备份。</p>
+
+      <div class="download-row">
+        <a class="btn-main" href="workbuddy-migrate-v1.0.0.zip" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下载 v1.0.0（约 0.6 MB）
+        </a>
+        <span class="meta-line">SHA256：<a href="workbuddy-migrate-v1.0.0.sha256" download>校验文件</a> · 纯 Python 标准库 · 全程本地运行</span>
+      </div>
+
+      <div class="repo-grid">
+        <a class="repo-card" href="https://cnb.cool/goodtimenb/workbuddy-migrate" target="_blank" rel="noopener noreferrer">
+          <span class="repo-tag repo-tag--cnb">CNB</span>
+          cnb.cool/goodtimenb/workbuddy-migrate
+        </a>
+        <a class="repo-card" href="https://github.com/GoodTimeGGB/workbuddy-migrate" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          <span class="repo-tag repo-tag--gh">GitHub</span>
+          github.com/GoodTimeGGB/workbuddy-migrate
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 它是什么 -->
+  <section class="section">
+    <h2 class="section-title">它是什么</h2>
+    <div class="card">
+      <p class="desc">把旧电脑上 WorkBuddy 的<b style="color:var(--ink)">注册信息、会话、任务、文件内容（可选含完整对话记录）</b>打包成一个 zip，传到新电脑一键导入。导入前有完整预览与自动备份，<b style="color:var(--ink)">任何情况下不会删除目标电脑已有数据</b>。</p>
+      <ul class="feature-list" style="margin-top:16px">
+        <li>跨系统迁移：公司 Windows 导出 → 家里 Mac 导入（自动重写路径前缀）</li>
+        <li>纯 Python 标准库实现，零第三方依赖；未装 Python 时启动脚本会引导一键安装</li>
+        <li>全程本地运行，不上传任何数据到云端</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 快速开始 -->
+  <section class="section">
+    <h2 class="section-title">快速开始</h2>
+    <div class="card">
+      <table class="quick-table">
+        <tr><th>下载后</th><td>解压 zip 到任意文件夹（Windows 解压前建议右键 → 属性 → 解除锁定）</td></tr>
+        <tr><th>Windows</th><td>双击 <code>scripts/windows/start.bat</code>，自动打开浏览器</td></tr>
+        <tr><th>macOS</th><td>终端执行 <code>chmod +x scripts/macos/*.sh scripts/macos/*.command</code> 后双击 <code>start.command</code></td></tr>
+        <tr><th>Linux</th><td><code>bash scripts/linux/start.sh</code></td></tr>
+      </table>
+      <p class="more-links">使用期间请保持命令行窗口开启（可最小化）。详细图文步骤见 <a class="inline-link" href="guide.html">在线使用说明 →</a></p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section">
+    <h2 class="section-title">环境要求与常见问题</h2>
+    <div class="card">
+      <ul class="feature-list">
+        <li>Python 3.8+（<a class="inline-link" href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer">官网下载</a> · 慢可用<a class="inline-link" href="https://mirrors.huaweicloud.com/python/" target="_blank" rel="noopener noreferrer">华为镜像</a>）；没有也没关系，双击启动后会引导安装</li>
+        <li>黑窗口一闪而过？看同目录 <code>start.log</code>；或运行 <code>scripts/windows/diagnose.bat</code> 一键诊断</li>
+        <li>页面显示「正在扫描本机空间」是正常现象，首次扫描大目录需要几十秒</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 免责声明 -->
+  <section class="section">
+    <h2 class="section-title">免责声明</h2>
+    <div class="card">
+      <blockquote class="disclaimer-quote">本工具为个人开发的第三方开源工具（MIT License），非 WorkBuddy 官方出品，与腾讯 / WorkBuddy 团队无关联。请在导入前确认已做好数据备份；导出包内含你的对话与任务数据，请通过可信渠道传输并妥善保管。使用本工具造成的任何数据问题由使用者自行承担。</blockquote>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <span class="footer-copy">宁的AI小站 (GoodTime) · v1.0.0 · 2026-08-27</span>
+    <span>
+      <a href="https://wangjn.site/" target="_blank" rel="noopener noreferrer">wangjn.site 主站</a> ·
+      <a href="https://cnb.cool/goodtimenb/workbuddy-migrate" target="_blank" rel="noopener noreferrer">CNB 仓库</a> ·
+      <a href="https://github.com/GoodTimeGGB/workbuddy-migrate" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
+    </span>
+  </div>
+</footer>
 
 </body>
 </html>
