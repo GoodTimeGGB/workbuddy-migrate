@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkBuddy 迁移工具 - 免费下载</title>
+<style>
+  :root{
+    --brand:#4f6ef7; --ink:#1c2333; --muted:#6b7280;
+    --bg:#f6f7fb; --card:#ffffff; --line:#e5e8f0; --ok:#16a34a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px 64px}
+  header{background:linear-gradient(135deg,#4f6ef7 0%,#7a5cf0 100%);color:#fff;padding:56px 20px 48px;text-align:center}
+  header h1{font-size:30px;font-weight:700;letter-spacing:.5px}
+  header p{margin-top:10px;opacity:.92;font-size:15px}
+  .btn{display:inline-block;background:#fff;color:var(--brand);font-weight:700;font-size:17px;padding:13px 38px;border-radius:999px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.18);margin-top:26px;transition:transform .15s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .meta{margin-top:14px;font-size:12.5px;opacity:.85}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin-top:22px}
+  h2{font-size:18px;margin-bottom:12px}
+  ul{padding-left:20px}
+  li{margin:5px 0}
+  code{background:#eef1f8;border-radius:5px;padding:1px 7px;font-size:13.5px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;width:110px}
+  a.link{color:var(--brand);text-decoration:none;font-weight:600}
+  a.link:hover{text-decoration:underline}
+  .note{font-size:13px;color:var(--muted);word-break:break-all}
+  footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:36px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>WorkBuddy 迁移工具</h1>
+  <p>在两台电脑之间迁移 WorkBuddy 的空间、会话与任务数据 · 支持 Windows / macOS / Linux · 支持跨系统迁移</p>
+  <a class="btn" href="workbuddy-migrate-v1.0.0.zip" download>⬇️ 下载 v1.0.0（约 0.6 MB）</a>
+  <div class="meta">SHA256：4d96ce62…ab34e8025 · <a href="workbuddy-migrate-v1.0.0.sha256" style="color:#fff" download>校验文件</a></div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <h2>它是什么</h2>
+    <p>把旧电脑上 WorkBuddy 的<b>注册信息、会话、任务、文件内容（可选含完整对话记录）</b>打包成一个 zip，传到新电脑一键导入。导入前有完整预览与自动备份，<b>任何情况下不会删除目标电脑已有数据</b>。</p>
+    <ul style="margin-top:10px">
+      <li>✅ 跨系统迁移：公司 Windows 导出 → 家里 Mac 导入（自动重写路径前缀）</li>
+      <li>✅ 纯 Python 标准库实现，零第三方依赖；未装 Python 时启动脚本会引导一键安装</li>
+      <li>✅ 全程本地运行，不上传任何数据到云端</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>快速开始</h2>
+    <table>
+      <tr><th>下载后</th><td>解压 zip 到任意文件夹（Windows 解压前建议右键 → 属性 → 解除锁定）</td></tr>
+      <tr><th>Windows</th><td>双击 <code>scripts/windows/start.bat</code>，自动打开浏览器</td></tr>
+      <tr><th>macOS</th><td>终端执行 <code>chmod +x scripts/macos/*.sh scripts/macos/*.command</code> 后双击 <code>start.command</code></td></tr>
+      <tr><th>Linux</th><td><code>bash scripts/linux/start.sh</code></td></tr>
+    </table>
+    <p style="margin-top:12px">使用期间请保持命令行窗口开启（可最小化）。详细图文步骤见 <a class="link" href="guide.html">在线使用说明</a>。</p>
+  </section>
+
+  <section>
+    <h2>环境要求与常见问题</h2>
+    <ul>
+      <li>Python 3.8+（<a class="link" href="https://www.python.org/downloads/" target="_blank">官网下载</a> · 慢可用<a class="link" href="https://mirrors.huaweicloud.com/python/" target="_blank">华为镜像</a>）；没有也没关系，双击启动后会引导安装</li>
+      <li>黑窗口一闪而过？看同目录 <code>start.log</code>；或运行 <code>scripts/windows/diagnose.bat</code> 一键诊断</li>
+      <li>页面显示"正在扫描本机空间"是正常现象，首次扫描大目录需要几十秒</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>免责声明</h2>
+    <p class="note">本工具为个人开发的第三方开源工具（MIT License），非 WorkBuddy 官方出品，与腾讯/WorkBuddy 团队无关联。请在导入前确认已做好数据备份；导出包内含你的对话与任务数据，请通过可信渠道传输并妥善保管。使用本工具造成的任何数据问题由使用者自行承担。</p>
+  </section>
+
+  <footer>宁的AI小站 (GoodTime) · v1.0.0 · 2026-08-27</footer>
+</div>
+
+</body>
+</html>
