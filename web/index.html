@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WorkBuddy 迁移工具</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --line:#e3e6ea; --text:#1f2329;
+  --muted:#86909c; --brand:#0a6cff; --brand-weak:#e8f1ff;
+  --ok:#00a44b; --ok-weak:#e8f7ef; --warn:#d97706; --warn-weak:#fdf3e3;
+  --danger:#d92d20; --danger-weak:#fdeceb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:var(--muted);margin-bottom:18px;font-size:13px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{padding:9px 22px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:14px}
+.tab.active{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:15px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px}
+.kv b{color:var(--muted);font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:500;background:#fafbfc}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px}
+.b-new{background:var(--ok-weak);color:var(--ok)}
+.b-conflict{background:var(--warn-weak);color:var(--warn)}
+.b-unreg{background:#f0f1f3;color:var(--muted)}
+.b-corrupt{background:var(--danger-weak);color:var(--danger)}
+button{font-size:14px;border-radius:8px;border:1px solid var(--line);background:var(--card);
+  padding:8px 18px;cursor:pointer;font-family:inherit}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+button.primary:disabled{background:#9dc2ff;border-color:#9dc2ff;cursor:not-allowed}
+button.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+button.ghost{border-color:transparent;color:var(--brand)}
+.muted{color:var(--muted)}
+.mono{font-family:Consolas,monospace;font-size:12px}
+.progress-outer{height:10px;background:#eceff3;border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.progress-inner{height:100%;background:var(--brand);width:0%;transition:width .3s;border-radius:6px}
+.prog-text{font-size:13px;color:var(--muted)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
+.stat{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat .n{font-size:22px;font-weight:700}
+.stat .l{font-size:12px;color:var(--muted)}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:36px 16px;text-align:center;cursor:pointer;transition:.15s}
+.drop.hover{border-color:var(--brand);background:var(--brand-weak)}
+.strategies{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.strat{border:1.5px solid var(--line);border-radius:10px;padding:12px;cursor:pointer}
+.strat.sel{border-color:var(--brand);background:var(--brand-weak)}
+.strat .t{font-weight:600;margin-bottom:4px}
+.strat .d{font-size:12px;color:var(--muted);line-height:1.5}
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal{background:var(--card);border-radius:12px;padding:22px;width:min(560px,92vw);max-height:84vh;overflow:auto}
+.modal h3{margin:0 0 10px}
+.warnbox{background:var(--warn-weak);border:1px solid #f3d9a8;border-radius:8px;padding:10px 12px;font-size:13px;margin:10px 0}
+.errbox{background:var(--danger-weak);border:1px solid #f5b9b4;border-radius:8px;padding:10px 12px;font-size:13px;margin:10px 0}
+.fail-list{max-height:220px;overflow:auto;font-size:12px}
+.fail-list div{padding:3px 0;border-bottom:1px dashed var(--line)}
+.hidden{display:none!important}
+label.chk{display:flex;align-items:center;gap:8px;margin:12px 0 4px;font-size:13px;cursor:pointer}
+.footer-actions{display:flex;gap:10px;align-items:center;margin-top:6px}
+.out-dir-row{display:flex;gap:8px;align-items:center;width:100%}
+.out-dir-row input[type=text]{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-family:Consolas,monospace;font-size:12px}
+.out-dir-row button{padding:6px 12px;font-size:13px}
+details summary{cursor:pointer;font-size:13px;color:var(--muted);padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>WorkBuddy 迁移工具</h1>
+  <div class="sub">在旧电脑上「导出」，把生成的 zip 文件通过网盘/邮件传到新电脑，再在这里「导入」。</div>
+  <div id="file-protocol-warn" class="errbox hidden" style="margin-bottom:14px">
+    <b>请先启动工具：</b>你当前是直接用浏览器打开了这个 HTML 文件，而不是通过 start.bat 启动本地服务。
+    请关闭此页面，回到文件夹，<b>双击 start.bat</b> 启动，由它自动打开浏览器。
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-export" onclick="switchTab('export')">导出</div>
+    <div class="tab" id="tab-import" onclick="switchTab('import')">导入</div>
+  </div>
+
+  <!-- ============ 导出 ============ -->
+  <div id="page-export">
+    <div class="card" id="exp-env"></div>
+    <div class="card">
+      <h3>选择要导出的空间</h3>
+      <div id="exp-table">加载中…</div>
+      <label class="chk"><input type="checkbox" id="inc-projects"> 包含完整对话记录（体积较大，仅需迁移任务和文件时可省略）</label>
+      <div class="footer-actions">
+        <button class="primary" id="btn-export" onclick="startExport()">开始导出</button>
+        <span class="muted" id="exp-hint"></span>
+      </div>
+    </div>
+    <div class="card hidden" id="exp-progress-card">
+      <h3>导出进度</h3>
+      <div class="progress-outer"><div class="progress-inner" id="exp-bar"></div></div>
+      <div class="prog-text" id="exp-prog-text"></div>
+    </div>
+    <div class="card hidden" id="exp-result"></div>
+  </div>
+
+  <!-- ============ 导入 ============ -->
+  <div id="page-import" class="hidden">
+    <div class="card">
+      <h3>上传导出包</h3>
+      <div class="drop" id="drop" onclick="document.getElementById('file-input').click()">
+        <div style="font-size:34px">📦</div>
+        <div><b>点击选择</b> 或拖拽 <span class="mono">workbuddy-export-*.zip</span> 到此处</div>
+        <div class="muted" style="margin-top:6px">上传后会先校验并展示预览，确认后才会真正写入</div>
+        <input type="file" id="file-input" accept=".zip" class="hidden" onchange="onFilePicked(this.files[0])">
+      </div>
+      <div class="progress-outer hidden" id="imp-up-bar-wrap"><div class="progress-inner" id="imp-up-bar"></div></div>
+      <div class="prog-text" id="imp-up-text"></div>
+    </div>
+
+    <div id="imp-preview" class="hidden">
+      <div class="card">
+        <h3>导入预览</h3>
+        <div id="imp-summary" class="kv"></div>
+        <details open><summary>空间（含文件内容）</summary><div id="imp-ws-table"></div></details>
+        <details open><summary>会话与任务</summary><div id="imp-sess-table"></div></details>
+        <details id="proj-details" class="hidden"><summary>对话记录</summary><div id="imp-proj-table"></div></details>
+      </div>
+      <div class="card">
+        <h3>去重策略（遇到本机已存在的同名数据时）</h3>
+        <div class="strategies" id="strategies">
+          <div class="strat sel" data-v="merge" onclick="pickStrategy(this)">
+            <div class="t">智能合并 <span class="badge b-new">推荐</span></div>
+            <div class="d">双方数据取并集：新文件补入，冲突保留较新版本，绝不删除本机已有内容</div>
+          </div>
+          <div class="strat" data-v="skip" onclick="pickStrategy(this)">
+            <div class="t">跳过已存在</div>
+            <div class="d">本机已有同名空间/会话/任务则完全不动，只导入本机没有的部分</div>
+          </div>
+          <div class="strat" data-v="overwrite" onclick="pickStrategy(this)">
+            <div class="t">覆盖同名</div>
+            <div class="d">同名项以导出包版本替换（不删除本机多余文件，被覆盖内容会先备份）</div>
+          </div>
+        </div>
+        <div class="footer-actions">
+          <button class="primary" onclick="confirmImport()">开始导入</button>
+          <span class="muted">导入前会自动备份本机将被改动的数据</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="imp-progress-card">
+      <h3>导入进度</h3>
+      <div class="progress-outer"><div class="progress-inner" id="imp-bar"></div></div>
+      <div class="prog-text" id="imp-prog-text"></div>
+    </div>
+    <div class="card hidden" id="imp-result"></div>
+  </div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="modal-mask hidden" id="confirm-mask">
+  <div class="modal">
+    <h3>确认导入</h3>
+    <div id="confirm-body"></div>
+    <div class="warnbox">⚠️ 导入会写入本机 WorkBuddy 数据。工具会先自动备份，但建议同时自行留存一份导出包。</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+      <button onclick="closeConfirm()">取消</button>
+      <button class="primary" id="btn-confirm-apply" onclick="doApply()">确认导入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let state = null, exportJobId = null, stageJobId = null, applyJobId = null;
+let strategy = "merge", pollTimer = null;
+
+if(location.protocol === "file:"){
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const w = $("file-protocol-warn");
+    if(w) w.classList.remove("hidden");
+  });
+}
+
+function fmtBytes(n){
+  if(n==null) return "-";
+  if(n < 1024) return n + " B";
+  if(n < 1048576) return (n/1024).toFixed(1) + " KB";
+  if(n < 1073741824) return (n/1048576).toFixed(1) + " MB";
+  return (n/1073741824).toFixed(2) + " GB";
+}
+function fmtTime(ms){
+  if(!ms) return "-";
+  const d = new Date(ms);
+  const p = x => String(x).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function esc(s){ const d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+
+function switchTab(t){
+  for(const x of ["export","import"]){
+    $("tab-"+x).classList.toggle("active", x===t);
+    $("page-"+x).classList.toggle("hidden", x!==t);
+  }
+  if(t==="export" && !state) loadState();
+}
+async function api(path, opts){
+  let r;
+  try{
+    r = await fetch(path, Object.assign({cache:"no-store"}, opts||{}));
+  }catch(e){
+    const isFile = location.protocol === "file:";
+    const hint = isFile
+      ? "你似乎直接双击打开了本 HTML 文件。请关闭此页面，返回文件夹双击 start.bat 启动工具。"
+      : "无法连接到本地服务器。请确认是否已双击 start.bat 启动，且黑窗口未关闭。";
+    throw new Error(hint + " (" + e.message + ")");
+  }
+  const j = await r.json().catch(()=>({error:"响应解析失败"}));
+  if(!r.ok || j.error) throw new Error(j.error || ("HTTP "+r.status));
+  return j;
+}
+
+/* ---------------- 导出 ---------------- */
+async function loadState(){
+  try{
+    state = await api("/api/state");
+    if(state.scanning){
+      $("exp-env").innerHTML = `<div class="warnbox">⏳ 正在扫描本机空间与文件大小，大目录可能需要几十秒，请稍候（页面会自动刷新）…</div>`;
+      $("exp-table").innerHTML = "";
+      await new Promise(r=>setTimeout(r, 2000));
+      return loadState();
+    }
+    if(state.error){
+      $("exp-env").innerHTML = "";
+      $("exp-table").innerHTML = `<div class="errbox">${esc(state.error)}</div>`;
+      return;
+    }
+  }catch(e){
+    $("exp-table").innerHTML = `<div class="errbox">读取本机数据失败：${esc(e.message)}</div>`;
+    return;
+  }
+  const s = state;
+  let env = `<div class="kv">
+    <b>本机用户目录</b><span class="mono">${esc(s.userprofile)}</span>
+    <b>空间根目录</b><span class="mono">${esc(s.workbuddy_root)}</span>
+    <b>导出保存到</b>
+    <div class="out-dir-row">
+      <input type="text" id="out-dir" value="${esc(s.output_dir)}" title="可手动修改，或点击浏览选择" onblur="refreshDiskFree(this.value)">
+      <button onclick="pickOutDir()">浏览…</button>
+    </div>
+    <b>导出目标盘剩余</b><span id="disk-free" title="${esc(s.disk_free_path)}">${esc(s.disk_free_path)} 所在盘：${fmtBytes(s.disk_free)}</span>
+  </div>`;
+  if(s.workbuddy_process)
+    env += `<div class="warnbox">⚠️ 检测到 WorkBuddy 正在运行。导出为只读操作可以继续，但若正在同时修改数据，建议先退出 WorkBuddy。</div>`;
+  if(!s.db_exists)
+    env += `<div class="warnbox">未找到 workbuddy.db，将仅导出空间文件夹内容。</div>`;
+  $("exp-env").innerHTML = env;
+
+  if(!s.workspaces.length){
+    $("exp-table").innerHTML = `<div class="muted">在 ${esc(s.workbuddy_root)} 下未发现任何空间文件夹。</div>`;
+    return;
+  }
+  let html = `<table><tr><th style="width:34px"></th><th>空间</th><th>路径</th><th>最后打开</th>
+    <th>会话/任务</th><th>文件/大小</th></tr>`;
+  for(const w of s.workspaces){
+    html += `<tr>
+      <td><input type="checkbox" class="ws-cb" value="${esc(w.path)}" checked></td>
+      <td><b>${esc(w.dir_name)}</b>${w.registered?"":' <span class="badge b-unreg">未注册</span>'}</td>
+      <td class="mono muted">${esc(w.path)}</td>
+      <td>${w.last_opened_at?fmtTime(w.last_opened_at):"—"}</td>
+      <td>${w.session_count} / ${w.task_count}</td>
+      <td>${w.file_count} 个 / ${fmtBytes(w.total_bytes)}</td></tr>`;
+  }
+  html += "</table>";
+  $("exp-table").innerHTML = html;
+}
+
+async function pickOutDir(){
+  try{
+    const initial = $("out-dir").value || "";
+    const r = await api("/api/pick-folder", {method:"POST", body: JSON.stringify({initial_dir: initial})});
+    if(r.path){
+      $("out-dir").value = r.path;
+      $("disk-free").textContent = r.path + " 所在盘：" + fmtBytes(r.disk_free);
+      $("disk-free").title = r.path;
+    } else if(!r.canceled){
+      alert("选择文件夹失败：" + (r.error || "未知错误"));
+    }
+  }catch(e){
+    alert("无法弹出选择对话框，请直接在输入框中填写路径。错误：" + e.message);
+  }
+}
+async function refreshDiskFree(p){
+  try{
+    const r = await api("/api/disk-free", {method:"POST", body: JSON.stringify({path: p})});
+    $("disk-free").textContent = r.path + " 所在盘：" + fmtBytes(r.disk_free);
+    $("disk-free").title = r.path;
+  }catch(e){
+    $("disk-free").textContent = "无法获取磁盘剩余";
+    $("disk-free").title = "";
+  }
+}
+
+async function startExport(){
+  const boxes = [...document.querySelectorAll(".ws-cb:checked")];
+  if(!boxes.length){ $("exp-hint").textContent = "请至少勾选一个空间"; return; }
+  $("exp-hint").textContent = "";
+  $("btn-export").disabled = true;
+  try{
+    const j = await api("/api/export/start", {method:"POST", body: JSON.stringify({
+      workspace_paths: boxes.map(b=>b.value),
+      include_projects: $("inc-projects").checked,
+      out_dir: $("out-dir").value
+    })});
+    exportJobId = j.job_id;
+    $("exp-progress-card").classList.remove("hidden");
+    $("exp-result").classList.add("hidden");
+    pollJob(exportJobId, "exp", onExportDone);
+  }catch(e){
+    showResult("exp", `<div class="errbox">导出启动失败：${esc(e.message)}</div>`);
+    $("btn-export").disabled = false;
+  }
+}
+function onExportDone(job){
+  $("btn-export").disabled = false;
+  if(job.status==="error") return `<div class="errbox">导出失败：${esc(job.error)}</div>`;
+  if(job.status==="canceled") return `<div class="errbox">导出已取消</div>`;
+  const r = job.result||{};
+  return `<h3>导出完成 ✅</h3>
+   <div class="stat-grid">
+     <div class="stat"><div class="n">${r.workspaces}</div><div class="l">空间</div></div>
+     <div class="stat"><div class="n">${r.sessions}</div><div class="l">会话</div></div>
+     <div class="stat"><div class="n">${r.tasks}</div><div class="l">任务</div></div>
+     <div class="stat"><div class="n">${fmtBytes(r.bytes)}</div><div class="l">文件总量</div></div>
+     <div class="stat"><div class="n">${fmtBytes(r.zip_size)}</div><div class="l">导出包大小</div></div>
+   </div>
+   <p>文件位置：<span class="mono">${esc(r.zip_path)}</span></p>
+   <p class="muted mono">SHA256: ${esc(r.sha256)}</p>
+   <button onclick='shellOpen(${JSON.stringify(r.zip_path).replace(/'/g,"&#39;")})'>打开所在文件夹</button>`;
+}
+
+/* ---------------- 导入 ---------------- */
+function onFilePicked(f){
+  if(!f) return;
+  if(!/\.zip$/i.test(f.name)){ alert("请选择 .zip 导出包"); return; }
+  uploadZip(f);
+}
+function setupDrop(){
+  const d = $("drop");
+  ["dragenter","dragover"].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.add("hover")}));
+  ["dragleave","drop"].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.remove("hover")}));
+  d.addEventListener("drop", e=>{
+    const f = e.dataTransfer.files[0];
+    if(f) onFilePicked(f);
+  });
+}
+async function uploadZip(f){
+  $("imp-up-bar-wrap").classList.remove("hidden");
+  $("imp-up-bar").style.width = "8%";
+  $("imp-up-text").textContent = "正在上传（" + fmtBytes(f.size) + "）…";
+  $("imp-preview").classList.add("hidden");
+  $("imp-result").classList.add("hidden");
+  $("imp-up-bar").style.width = "30%";
+  try{
+    const r = await fetch("/api/import/upload", {method:"POST", body: f});
+    const j = await r.json();
+    if(!r.ok || j.error) throw new Error(j.error || ("HTTP "+r.status));
+    $("imp-up-bar").style.width = "60%";
+    $("imp-up-text").textContent = "上传完成，正在校验与解压…";
+    stageJobId = j.job_id;
+    pollJob(stageJobId, "imp-up", async job=>{
+      if(job.status==="done"){ /* staged 阶段完成时状态为 staged */ }
+      return null;
+    }, (job)=>{
+      // 终态处理
+      if(job.status==="staged"){
+        $("imp-up-bar").style.width = "100%";
+        $("imp-up-text").textContent = "校验完成，请核对下方预览。";
+        loadPreview(job.id);
+      }else if(job.status==="error"){
+        $("imp-up-bar-wrap").classList.add("hidden");
+        showResult("imp", `<div class="errbox">导出包无法使用：${esc(job.error)}</div>`);
+      }
+    });
+  }catch(e){
+    $("imp-up-bar-wrap").classList.add("hidden");
+    $("imp-up-text").textContent = "";
+    showResult("imp", `<div class="errbox">上传失败：${esc(e.message)}</div>`);
+  }
+}
+async function loadPreview(jid){
+  let p;
+  try{ p = await api("/api/import/preview/"+jid); }
+  catch(e){ showResult("imp", `<div class="errbox">获取预览失败：${esc(e.message)}</div>`); return; }
+  const m = p.manifest_summary;
+  const PLAT = {win32:"Windows", darwin:"macOS", linux:"Linux"};
+  const srcPlat = PLAT[m.source_platform] || "未知系统";
+  const localPlat = (state && state.platform && (PLAT[state.platform] || state.platform)) ||
+                    (navigator.platform.indexOf("Mac") > -1 ? "macOS" : "Windows");
+  $("imp-summary").innerHTML = `
+    <b>导出来源</b><span>${esc(m.source_host||"-")} · <span class="badge" style="background:#eef2ff;color:#3b4db8">${esc(srcPlat)}</span>（${fmtTime(m.created_at)}）</span>
+    <b>本机系统</b><span><span class="badge" style="background:#e8f6ee;color:#1d7a46">${esc(localPlat)}</span></span>
+    <b>源空间根目录</b><span class="mono">${esc(m.source_root)}</span>
+    <b>→ 本机将写入</b><span class="mono">${esc(m.target_root)}</span>
+    <b>包内条目</b><span>${m.entries} 项 / 解压后 ${fmtBytes(m.uncompressed_bytes)}</span>`
+    + ((m.source_platform === "win32") !== (localPlat === "Windows")
+       ? `<div class="warnbox">🔄 <b>跨系统导入</b>：源机器是 ${esc(srcPlat)}，本机是 ${esc(localPlat)}。工具会自动把路径前缀重写为本机风格；个别文件若因文件名不符合本机系统规范而无法写入，会跳过并计入失败清单，不影响其余数据。对话记录的归档文件夹名按本机规则生成。</div>`
+       : "");
+  // 空间表
+  let t = `<table><tr><th>空间</th><th>源路径 → 本机路径</th><th>状态</th><th>文件/大小</th></tr>`;
+  for(const w of p.workspaces){
+    let badge;
+    if(w.corrupt_files>0)
+      badge = `<span class="badge b-corrupt">${w.corrupt_files} 个文件损坏</span> `;
+    else badge = "";
+    badge += w.exists_local
+      ? `<span class="badge b-conflict">本机已存在（${w.conflict_files} 个同名）</span>`
+      : `<span class="badge b-new">新增</span>`;
+    t += `<tr><td><b>${esc(w.dir_name)}</b></td>
+      <td class="mono muted" style="word-break:break-all">${esc(w.source_path)}<br>→ ${esc(w.target_path)}</td>
+      <td>${badge}</td><td>${w.file_count} 个 / ${fmtBytes(w.total_bytes)}</td></tr>`;
+    if(w.corrupt_files>0)
+      t += `<tr><td colspan="4"><div class="fail-list">${w.corrupt_list.map(c=>`<div>损坏：${esc(c)}（导入时将跳过）</div>`).join("")}</div></td></tr>`;
+  }
+  t += "</table>";
+  $("imp-ws-table").innerHTML = t;
+  // 会话表
+  let t2 = `<table><tr><th>会话</th><th>所属空间（本机路径）</th><th>任务</th><th>状态</th></tr>`;
+  for(const s of p.sessions){
+    const badge = (s.exists_local||s.task_conflict)
+      ? `<span class="badge b-conflict">${s.exists_local?"本机已存在":"本机已有任务"}</span>`
+      : `<span class="badge b-new">新增</span>`;
+    t2 += `<tr><td>${esc(s.title)}<br><span class="mono muted">${esc(s.id)}</span></td>
+      <td class="mono muted" style="word-break:break-all">${esc(s.cwd_target)}</td>
+      <td>${s.task_count}</td><td>${badge}</td></tr>`;
+  }
+  t2 += "</table>";
+  $("imp-sess-table").innerHTML = t2;
+  // 对话记录
+  if(p.projects && p.projects.length){
+    $("proj-details").classList.remove("hidden");
+    let t3 = `<table><tr><th>会话</th><th>写入位置</th><th>大小</th><th>状态</th></tr>`;
+    for(const q of p.projects){
+      t3 += `<tr><td class="mono">${esc(q.session_id)}</td>
+        <td class="mono muted">${esc(q.target_folder)}</td>
+        <td>${fmtBytes(q.size)}</td>
+        <td>${q.exists_local?'<span class="badge b-conflict">已存在</span>':'<span class="badge b-new">新增</span>'}</td></tr>`;
+    }
+    t3 += "</table>";
+    $("imp-proj-table").innerHTML = t3;
+  }
+  $("imp-preview").classList.remove("hidden");
+  $("imp-preview").scrollIntoView({behavior:"smooth"});
+}
+
+function pickStrategy(el){
+  document.querySelectorAll(".strat").forEach(x=>x.classList.remove("sel"));
+  el.classList.add("sel");
+  strategy = el.dataset.v;
+}
+function confirmImport(){
+  if(!stageJobId) return;
+  const sName = {merge:"智能合并", skip:"跳过已存在", overwrite:"覆盖同名"}[strategy];
+  $("confirm-body").innerHTML = `
+    <p>即将以「<b>${sName}</b>」策略把导出包内容导入本机。</p>
+    <ul style="font-size:13px;color:var(--muted);line-height:1.8">
+      <li>写入前会自动备份本机数据库与将被改动的文件</li>
+      <li>任何情况下都不会删除本机已有数据</li>
+      <li>校验损坏的文件会自动跳过并记录</li>
+    </ul>`;
+  $("confirm-mask").classList.remove("hidden");
+}
+function closeConfirm(){ $("confirm-mask").classList.add("hidden"); }
+async function doApply(){
+  closeConfirm();
+  try{
+    const j = await api("/api/import/apply", {method:"POST", body: JSON.stringify({
+      job_id: stageJobId, strategy
+    })});
+    applyJobId = j.job_id;
+    $("imp-progress-card").classList.remove("hidden");
+    $("imp-result").classList.add("hidden");
+    pollJob(applyJobId, "imp", onImportDone);
+  }catch(e){
+    showResult("imp", `<div class="errbox">导入启动失败：${esc(e.message)}</div>`);
+  }
+}
+function onImportDone(job){
+  if(job.status==="error") return `<div class="errbox">导入失败：${esc(job.error)}<br>
+    <span class="muted">已写入的部分可通过重新导入补齐；备份未受影响。</span></div>`;
+  if(job.status==="canceled") return `<div class="errbox">导入已取消。已完成部分有效，可重新导入补齐。</div>`;
+  const r = job.result||{}, st = r.stats||{};
+  let html = `<h3>导入完成 ✅</h3><div class="stat-grid">
+    <div class="stat"><div class="n">${st.workspaces_registered}</div><div class="l">空间注册写入</div></div>
+    <div class="stat"><div class="n">${(st.files_copied||0)+(st.files_replaced||0)}</div><div class="l">文件写入</div></div>
+    <div class="stat"><div class="n">${fmtBytes(st.bytes_copied)}</div><div class="l">文件总量</div></div>
+    <div class="stat"><div class="n">${(st.sessions_inserted||0)+(st.sessions_updated||0)}</div><div class="l">会话写入</div></div>
+    <div class="stat"><div class="n">${st.tasks_written}</div><div class="l">任务写入</div></div>
+    <div class="stat"><div class="n">${st.projects_written}</div><div class="l">对话记录</div></div>
+  </div>`;
+  const skipped = (st.files_skipped||0)+(st.files_merged_kept_local||0)+(st.tasks_skipped||0)+(st.sessions_skipped||0);
+  if(skipped) html += `<p class="muted">按「${esc(r.strategy)}」策略跳过 ${skipped} 项本机已存在内容。</p>`;
+  if(st.files_corrupt_skipped) html += `<div class="warnbox">⚠️ ${st.files_corrupt_skipped} 个文件因校验和不符被跳过，建议重新传输导出包后再导入一次。</div>`;
+  if(r.failures && r.failures.length){
+    html += `<h3 style="margin-top:14px">失败明细（${r.failures.length}）</h3><div class="fail-list">` +
+      r.failures.map(f=>`<div>${esc(f.item)} — ${esc(f.reason)}</div>`).join("") + "</div>";
+  }
+  html += `<p style="margin-top:12px">备份位置：<span class="mono">${esc(r.backup_dir)}</span>
+    <button class="ghost" onclick='shellOpen(${JSON.stringify(r.backup_dir).replace(/'/g,"&#39;")})'>打开</button></p>
+    <p class="muted">如需在 WorkBuddy 中看到导入的空间，启动 WorkBuddy 后从空间列表打开对应文件夹即可。</p>`;
+  return html;
+}
+
+/* ---------------- 通用 ---------------- */
+function pollJob(jobId, prefix, onDone, onTerminal){
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async ()=>{
+    let job;
+    try{ job = await api("/api/job/"+jobId); }
+    catch(e){ return; }
+    const bar = $(prefix+"-bar"), txt = $(prefix+"-prog-text");
+    const pct = job.total>0 ? Math.min(100, Math.round(job.current*100/job.total)) : null;
+    if(bar) bar.style.width = (pct==null ? (job.status==="running"?"40%":"100%") : pct+"%");
+    if(txt) txt.textContent = `${job.phase}${pct!=null?` ${pct}%`:""}${job.message?(" — "+job.message):""}`;
+    if(job.status!=="running"){
+      clearInterval(pollTimer);
+      const html = onDone(job);
+      if(html!=null) showResult(prefix, html);
+      if(onTerminal) onTerminal(job);
+    }
+  }, 500);
+}
+function showResult(prefix, html){
+  const el = $(prefix+"-result");
+  el.innerHTML = html;
+  el.classList.remove("hidden");
+}
+async function shellOpen(p){
+  try{ await api("/api/shell-open", {method:"POST", body: JSON.stringify({path: p})}); }
+  catch(e){ alert("打开失败："+e.message); }
+}
+setupDrop();
+loadState();
+</script>
+</body>
+</html>
